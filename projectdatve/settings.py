@@ -4,6 +4,9 @@ Django settings for projectdatve project.
 
 import os
 from pathlib import Path
+import dj_database_url
+from decouple import config
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -17,7 +20,7 @@ SECRET_KEY = 'django-insecure-vx4^aqcj*b(w=)3=ez2=)&u9t^5ub&i+2%#^@7^&1lbp9%gp5c
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', 'c8042b50-ec04-4858-9408-154bf0fd1d19-00-1kxmtq2diloga.kirk.replit.dev', '.replit.dev']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -68,10 +71,9 @@ WSGI_APPLICATION = 'projectdatve.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL')
+    )
 }
 
 
@@ -115,6 +117,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
