@@ -1,0 +1,420 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Kết quả tìm kiếm | Đặt vé xe {% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Thanh bên bộ lọc tìm kiếm -->
+        <div class="col-lg-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Tìm kiếm</h5>
+                    
+                    <form action="{% url 'ketquatimkiem' %}" method="get">
+                        <div class="mb-3">
+                            <label for="{{ form.departure_city.id_for_label }}" class="form-label">
+                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                Đi từ
+                            </label>
+                            {{ form.departure_city }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.arrival_city.id_for_label }}" class="form-label">
+                                <i class="fas fa-map-marker text-danger me-2"></i>
+                                Đến
+                            </label>
+                            {{ form.arrival_city }}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.departure_date.id_for_label }}" class="form-label">
+                                <i class="fas fa-calendar-alt text-info me-2"></i>
+                                Ngày đi
+                            </label>
+                            {{ form.departure_date }}
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            <i class="fas fa-search me-2"></i>
+                            Tìm kiếm
+                        </button>
+                    </form>
+                    
+                    {% if trips %}
+                        <hr>
+                        
+                        <h6 class="mb-3">Bộ lọc</h6>
+                        
+                        <!-- Bộ lọc thời gian -->
+                        <div class="mb-3">
+                            <h6 class="form-label">Giờ khởi hành</h6>
+                            <div class="form-check">
+                                <input class="form-check-input filter-time" type="checkbox" value="00:00-06:00" id="time1">
+                                <label class="form-check-label" for="time1">
+                                    Sáng sớm (00:00 - 06:00)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filter-time" type="checkbox" value="06:00-12:00" id="time2">
+                                <label class="form-check-label" for="time2">
+                                    Buổi sáng (06:00 - 12:00)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filter-time" type="checkbox" value="12:00-18:00" id="time3">
+                                <label class="form-check-label" for="time3">
+                                    Buổi chiều (12:00 - 18:00)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filter-time" type="checkbox" value="18:00-24:00" id="time4">
+                                <label class="form-check-label" for="time4">
+                                    Buổi tối (18:00 - 24:00)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Bộ lọc loại xe -->
+                        <div class="mb-3">
+                            <h6 class="form-label">Loại xe</h6>
+                            <div class="form-check">
+                                <input class="form-check-input filter-bus-type" type="checkbox" value="limousine" id="busType1">
+                                <label class="form-check-label" for="busType1">
+                                    Limousine
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filter-bus-type" type="checkbox" value="sleeper" id="busType2">
+                                <label class="form-check-label" for="busType2">
+                                    Giường nằm
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filter-bus-type" type="checkbox" value="seater" id="busType3">
+                                <label class="form-check-label" for="busType3">
+                                    Ghế ngồi
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filter-bus-type" type="checkbox" value="express" id="busType4">
+                                <label class="form-check-label" for="busType4">
+                                    Xe khách
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Bộ lọc giá -->
+                        <div class="mb-3">
+                            <h6 class="form-label">Giá vé</h6>
+                            <div class="form-check">
+                                <input class="form-check-input filter-price" type="checkbox" value="0-200000" id="price1">
+                                <label class="form-check-label" for="price1">
+                                    Dưới 200,000 đ
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filter-price" type="checkbox" value="200000-400000" id="price2">
+                                <label class="form-check-label" for="price2">
+                                    200,000 đ - 400,000 đ
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filter-price" type="checkbox" value="400000-600000" id="price3">
+                                <label class="form-check-label" for="price3">
+                                    400,000 đ - 600,000 đ
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input filter-price" type="checkbox" value="600000-999999999" id="price4">
+                                <label class="form-check-label" for="price4">
+                                    Trên 600,000 đ
+                                </label>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Kết quả tìm kiếm -->
+        <div class="col-lg-9">
+            <div class="bg-light rounded p-4 mb-4">
+                <h4 class="mb-3">Kết quả tìm kiếm</h4>
+                
+                {% if trips %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="mb-0">
+                                <span class="fw-bold">{{ departure_city }}</span>
+                                <i class="fas fa-arrow-right mx-2"></i>
+                                <span class="fw-bold">{{ arrival_city }}</span>
+                            </p>
+                            <p class="mb-0 text-muted">
+                                {{ departure_date|date:"d/m/Y" }} | {{ trips.count }} chuyến xe
+                            </p>
+                        </div>
+                        
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown">
+                                Sắp xếp
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                                <li><a class="dropdown-item sort-option" href="#" data-sort="time">Giờ khởi hành sớm nhất</a></li>
+                                <li><a class="dropdown-item sort-option" href="#" data-sort="price-asc">Giá thấp đến cao</a></li>
+                                <li><a class="dropdown-item sort-option" href="#" data-sort="price-desc">Giá cao đến thấp</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            {% if trips %}
+                <div class="trip-list">
+                    {% for trip in trips %}
+                        <div class="card mb-3 shadow-sm trip-item" 
+                             data-departure-time="{{ trip.departure_time|time:'H:i' }}"
+                             data-price="{{ trip.price }}"
+                             data-bus-type="{{ trip.bus_type }}">
+                            <div class="card-body">
+                                <div class="row">
+                                    <!-- Thông tin nhànhà xe -->
+                                    <div class="col-md-3 border-end">
+                                        <div class="d-flex flex-column align-items-center text-center">
+                                            {% if trip.company.logo %}
+                                                <img src="{{ trip.company.logo }}" alt="{{ trip.company.name }}" class="mb-2" style="max-width: 100px; max-height: 60px;">
+                                            {% else %}
+                                                <div class="bg-light rounded-circle mb-2 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                                    <i class="fas fa-bus text-primary" style="font-size: 24px;"></i>
+                                                </div>
+                                            {% endif %}
+                                            
+                                            <h6 class="mb-1">{{ trip.company.name }}</h6>
+                                            
+                                            <div class="text-warning small">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= trip.company.rating|floatformat:"0"|add:"0" %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% elif forloop.counter <= trip.company.rating|floatformat:"0"|add:"0"|add:"1" and trip.company.rating|floatformat:"1"|slice:"-1:" != "0" %}
+                                                        <i class="fas fa-star-half-alt"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            
+                                            <span class="badge bg-secondary mt-1">{{ trip.bus_type_display }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Chi tiết chuyến đi -->
+                                    <div class="col-md-6 py-2">
+                                        <div class="row">
+                                            <!-- Thông tin khởi hành -->
+                                            <div class="col-5 text-center">
+                                                <h5 class="mb-0">{{ trip.departure_time|time:"H:i" }}</h5>
+                                                <p class="text-muted small mb-1">{{ trip.departure_time|date:"d/m/Y" }}</p>
+                                                <p class="fw-bold mb-0">{{ trip.route.departure_station.name }}</p>
+                                                <p class="text-muted small">{{ trip.route.departure_station.city }}</p>
+                                            </div>
+                                            
+                                            <!-- Thời giangian chuyến đi -->
+                                            <div class="col-2 d-flex flex-column align-items-center justify-content-center">
+                                                <div class="bg-light rounded-circle p-1 mb-1">
+                                                    <i class="fas fa-arrow-right text-primary"></i>
+                                                </div>
+                                                <p class="text-muted small text-center mb-0">
+                                                    {{ trip.route.duration|floatformat:"0"}} phút
+                                                </p>
+                                            </div>
+                                            
+                                            <!-- Thông tin đến -->
+                                            <div class="col-5 text-center">
+                                                <h5 class="mb-0">{{ trip.arrival_time|time:"H:i" }}</h5>
+                                                <p class="text-muted small mb-1">{{ trip.arrival_time|date:"d/m/Y" }}</p>
+                                                <p class="fw-bold mb-0">{{ trip.route.arrival_station.name }}</p>
+                                                <p class="text-muted small">{{ trip.route.arrival_station.city }}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Thông tin chuyến đi -->
+                                        <div class="mt-3">
+                                            <div class="d-flex justify-content-center text-muted small">
+                                                <div class="me-3">
+                                                    <i class="fas fa-map-marked-alt me-1"></i>
+                                                    <span>{{ trip.route.distance }} km</span>
+                                                </div>
+                                                
+                                                <div class="me-3">
+                                                    <i class="fas fa-couch me-1"></i>
+                                                    <span>{{ trip.available_seats }} ghế trống</span>
+                                                </div>
+                                                
+                                                {% if trip.amenities %}
+                                                <div>
+                                                    <i class="fas fa-wifi me-1"></i>
+                                                    <span>Có tiện ích</span>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Nút Giá và Đặt chỗ -->
+                                    <div class="col-md-3 d-flex flex-column justify-content-center align-items-center border-start">
+                                        <h5 class="text-danger mb-3">{{ trip.price|floatformat:"0"|intcomma }} đ</h5>
+                                        <a href="{% url 'chitietchuyendi' trip.id %}" class="btn btn-primary w-100">
+                                            Chọn chuyến
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h4>Không tìm thấy chuyến xe nào</h4>
+                        
+                        {% if form.is_valid and departure_city and arrival_city %}
+                            <p class="text-muted">
+                                Không có chuyến xe nào từ {{ departure_city }} đến {{ arrival_city }} vào ngày {{ departure_date|date:"d/m/Y" }}.
+                            </p>
+                            <p>
+                                Vui lòng thử thay đổi lại thông tin tìm kiếm hoặc lựa chọn ngày khác.
+                            </p>
+                        {% else %}
+                            <p class="text-muted">
+                                Vui lòng chọn điểm đi, điểm đến và ngày đi để tìm kiếm chuyến xe.
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Chức năng sắp xếp
+        const sortLinks = document.querySelectorAll('.sort-option');
+        const tripList = document.querySelector('.trip-list');
+        const tripItems = document.querySelectorAll('.trip-item');
+        
+        sortLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const sortBy = this.getAttribute('data-sort');
+                
+                const tripArray = Array.from(tripItems);
+                
+                // Sắp xếp chuyến đi
+                if (sortBy === 'time') {
+                    tripArray.sort((a, b) => {
+                        return a.getAttribute('data-departure-time').localeCompare(b.getAttribute('data-departure-time'));
+                    });
+                } else if (sortBy === 'price-asc') {
+                    tripArray.sort((a, b) => {
+                        return parseInt(a.getAttribute('data-price')) - parseInt(b.getAttribute('data-price'));
+                    });
+                } else if (sortBy === 'price-desc') {
+                    tripArray.sort((a, b) => {
+                        return parseInt(b.getAttribute('data-price')) - parseInt(a.getAttribute('data-price'));
+                    });
+                }
+                
+                // Cập nhật DOM
+                tripArray.forEach(trip => {
+                    tripList.appendChild(trip);
+                });
+            });
+        });
+        
+        // Chức năng lọc
+        const filterTimeInputs = document.querySelectorAll('.filter-time');
+        const filterBusTypeInputs = document.querySelectorAll('.filter-bus-type');
+        const filterPriceInputs = document.querySelectorAll('.filter-price');
+        
+        function applyFilters() {
+            const selectedTimes = Array.from(filterTimeInputs)
+                .filter(input => input.checked)
+                .map(input => input.value);
+            
+            const selectedBusTypes = Array.from(filterBusTypeInputs)
+                .filter(input => input.checked)
+                .map(input => input.value);
+            
+            const selectedPriceRanges = Array.from(filterPriceInputs)
+                .filter(input => input.checked)
+                .map(input => input.value);
+            
+            tripItems.forEach(trip => {
+                let showTrip = true;
+                
+                // Lọc theo thời gian
+                if (selectedTimes.length > 0) {
+                    const tripTime = trip.getAttribute('data-departure-time');
+                    const tripHour = parseInt(tripTime.split(':')[0]);
+                    
+                    const matchesTimeFilter = selectedTimes.some(timeRange => {
+                        const [start, end] = timeRange.split('-');
+                        const startHour = parseInt(start.split(':')[0]);
+                        const endHour = parseInt(end.split(':')[0]);
+                        
+                        return tripHour >= startHour && tripHour < endHour;
+                    });
+                    
+                    if (!matchesTimeFilter) {
+                        showTrip = false;
+                    }
+                }
+                
+                // Lọc theo loại xe
+                if (selectedBusTypes.length > 0) {
+                    const tripBusType = trip.getAttribute('data-bus-type');
+                    
+                    if (!selectedBusTypes.includes(tripBusType)) {
+                        showTrip = false;
+                    }
+                }
+                
+                // Lọc theo giá
+                if (selectedPriceRanges.length > 0) {
+                    const tripPrice = parseInt(trip.getAttribute('data-price'));
+                    
+                    const matchesPriceFilter = selectedPriceRanges.some(priceRange => {
+                        const [min, max] = priceRange.split('-').map(Number);
+                        return tripPrice >= min && tripPrice <= max;
+                    });
+                    
+                    if (!matchesPriceFilter) {
+                        showTrip = false;
+                    }
+                }
+                
+                trip.style.display = showTrip ? 'block' : 'none';
+            });
+        }
+        
+        // Thêm trình lắng nghe sự kiện vào hộp kiểm lọc
+        filterTimeInputs.forEach(input => {
+            input.addEventListener('change', applyFilters);
+        });
+        
+        filterBusTypeInputs.forEach(input => {
+            input.addEventListener('change', applyFilters);
+        });
+        
+        filterPriceInputs.forEach(input => {
+            input.addEventListener('change', applyFilters);
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

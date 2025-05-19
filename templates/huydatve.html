@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}Hủy vé | Đặt vé xe {% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Xác nhận hủy vé</h4>
+                    
+                    <div class="alert alert-warning mb-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Lưu ý:</strong> Việc hủy vé sẽ không thể hoàn tác. Bạn có chắc chắn muốn hủy vé này không?
+                    </div>
+                    
+                    <!-- Thông tin chuyến -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                {% if booking.trip.company.logo %}
+                                    <img src="{{ booking.trip.company.logo }}" alt="{{ booking.trip.company.name }}" class="me-3" style="max-width: 80px; max-height: 50px;">
+                                {% else %}
+                                    <div class="bg-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                        <i class="fas fa-bus text-primary" style="font-size: 20px;"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div>
+                                    <h5 class="mb-1">{{ booking.trip.company.name }}</h5>
+                                    <div class="text-warning">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= booking.trip.company.rating|floatformat:"0"|add:"0" %}
+                                                <i class="fas fa-star"></i>
+                                            {% elif forloop.counter <= booking.trip.company.rating|floatformat:"0"|add:"0"|add:"1" and booking.trip.company.rating|floatformat:"1"|slice:"-1:" != "0" %}
+                                                <i class="fas fa-star-half-alt"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-2">
+                                    <div class="d-flex">
+                                        <div class="me-2">
+                                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 28px; height: 28px;">
+                                                <i class="fas fa-map-marker-alt small"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p class="text-muted small mb-0">Điểm đi</p>
+                                            <p class="mb-0">{{ booking.trip.route.departure_station.name }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-2">
+                                    <div class="d-flex">
+                                        <div class="me-2">
+                                            <div class="bg-danger rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 28px; height: 28px;">
+                                                <i class="fas fa-map-marker small"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p class="text-muted small mb-0">Điểm đến</p>
+                                            <p class="mb-0">{{ booking.trip.route.arrival_station.name }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-2">
+                                    <p class="text-muted small mb-0">Thời gian khởi hành</p>
+                                    <p class="mb-0">{{ booking.trip.departure_time|date:"H:i, d/m/Y" }}</p>
+                                </div>
+                                
+                                <div class="col-md-6 mb-2">
+                                    <p class="text-muted small mb-0">Thời gian đến (dự kiến)</p>
+                                    <p class="mb-0">{{ booking.trip.arrival_time|date:"H:i, d/m/Y" }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <p class="text-muted small mb-0">Hành khách</p>
+                                    <p class="mb-0">{{ booking.passenger_name }}</p>
+                                </div>
+                                
+                                <div class="col-md-6 mb-2">
+                                    <p class="text-muted small mb-0">Số ghế</p>
+                                    <p class="mb-0">{{ booking.seat.seat_number }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!--Chính sách hủy -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">Chính sách hủy vé</h5>
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Hủy trước 24 giờ so với giờ khởi hành: Hoàn 100% tiền vé
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-minus-circle text-warning me-2"></i>
+                                Hủy từ 12 đến 24 giờ trước giờ khởi hành: Hoàn 50% tiền vé
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-times-circle text-danger me-2"></i>
+                                Hủy dưới 12 giờ trước giờ khởi hành: Không hoàn tiền
+                            </li>
+                        </ul>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Bạn đang hủy vé vào <strong>{{ now|date:"H:i, d/m/Y" }}</strong>, 
+                            {% with time_diff=booking.trip.departure_time|timeuntil:now %}
+                                {% if "days" in time_diff %}
+                                    <span class="text-success">trước {{ time_diff }} so với giờ khởi hành</span>.
+                                    Bạn sẽ được hoàn 100% tiền vé.
+                                {% elif "hours" in time_diff and time_diff|slice:"0:2"|add:0 >= 24 %}
+                                    <span class="text-success">trước {{ time_diff }} so với giờ khởi hành</span>.
+                                    Bạn sẽ được hoàn 100% tiền vé.
+                                {% elif "hours" in time_diff and time_diff|slice:"0:2"|add:0 >= 12 %}
+                                    <span class="text-warning">trước {{ time_diff }} so với giờ khởi hành</span>.
+                                    Bạn sẽ được hoàn 50% tiền vé.
+                                {% else %}
+                                    <span class="text-danger">trước {{ time_diff }} so với giờ khởi hành</span>.
+                                    Bạn sẽ không được hoàn tiền.
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-end">
+                            <a href="{% url 'lichsudatve' %}" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-times-circle me-2"></i>
+                                Xác nhận hủy vé
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}Nhà xe | Đặt vé xe {% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Danh sách nhà xe</h2>
+    
+    <!-- Lọc và tìm kiếm -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="input-group">
+                <input type="text" class="form-control" id="companySearch" placeholder="Tìm kiếm nhà xe...">
+                <button class="btn btn-outline-primary" type="button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <select class="form-select" id="companyFilter">
+                <option value="all" selected>Tất cả</option>
+                <option value="rating">Xếp hạng cao nhất</option>
+                <option value="name-asc">Tên (A-Z)</option>
+                <option value="name-desc">Tên (Z-A)</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Danh sách nhà xe -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for company in companies %}
+            <div class="col company-item" data-name="{{ company.name }}" data-rating="{{ company.rating }}">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            {% if company.logo %}
+                            <img src="{{ company.logo }}" alt="{{ company.name }}" class="me-3" style="width: 64px; height: 64px; object-fit: contain;">
+                            {% else %}
+                            <div class="bg-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                                <i class="fas fa-bus text-primary" style="font-size: 24px;"></i>
+                            </div>
+                            {% endif %}
+                            <h5 class="card-title mb-0">{{ company.name }}</h5>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">
+                                    <span class="badge bg-warning text-dark">{{ company.rating|floatformat:1 }}/5</span>
+                                </div>
+                                <div class="text-warning">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= company.rating|floatformat:"0"|add:"0" %}
+                                            <i class="fas fa-star"></i>
+                                        {% elif forloop.counter <= company.rating|floatformat:"0"|add:"0"|add:"1" and company.rating|floatformat:"1"|slice:"-1:" != "0" %}
+                                            <i class="fas fa-star-half-alt"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p class="card-text">{{ company.description|truncatechars:150 }}</p>
+                        
+                        <div class="mb-2">
+                            <div class="d-flex align-items-center text-muted small mb-2">
+                                <i class="fas fa-phone me-2"></i>
+                                <span>{{ company.phone }}</span>
+                            </div>
+                            
+                            {% if company.email %}
+                            <div class="d-flex align-items-center text-muted small mb-2">
+                                <i class="fas fa-envelope me-2"></i>
+                                <span>{{ company.email }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if company.website %}
+                            <div class="d-flex align-items-center text-muted small">
+                                <i class="fas fa-globe me-2"></i>
+                                <a href="{{ company.website }}" target="_blank">{{ company.website }}</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mt-3">
+                            <!-- Tự động lấy tuyến đường phổ biến nhất cho nhà xe này -->
+                            {% with popular_trip=company.trips.first %}
+                                {% if popular_trip %}
+                                    <a href="{% url 'ketquatimkiem' %}?departure_city={{ popular_trip.route.departure_station.city }}&arrival_city={{ popular_trip.route.arrival_station.city }}&departure_date={{ today|date:'Y-m-d' }}" class="btn btn-outline-primary w-100">
+                                        Tìm chuyến xe
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'home' %}" class="btn btn-outline-primary w-100">
+                                        Tìm chuyến xe
+                                    </a>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    Chưa có nhà xe nào.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Phân trang nếu cần -->
+    {% if companies.paginator %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if companies.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ companies.previous_page_number }}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="fas fa-angle-double-left"></i>
+                        </span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="fas fa-angle-left"></i>
+                        </span>
+                    </li>
+                {% endif %}
+                
+                {% for num in companies.paginator.page_range %}
+                    {% if companies.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > companies.number|add:'-3' and num < companies.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if companies.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ companies.next_page_number }}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ companies.paginator.num_pages }}">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="fas fa-angle-right"></i>
+                        </span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="fas fa-angle-double-right"></i>
+                        </span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const companySearch = document.getElementById('companySearch');
+        const companyFilter = document.getElementById('companyFilter');
+        const companyItems = document.querySelectorAll('.company-item');
+        
+        // Chức năng tìm kiếm
+        companySearch.addEventListener('input', filterCompanies);
+        companyFilter.addEventListener('change', filterCompanies);
+        
+        function filterCompanies() {
+            const searchValue = companySearch.value.toLowerCase();
+            const filterValue = companyFilter.value;
+            
+            // Lấy mảng các nhà xexe để sắp xếp
+            const companyArray = Array.from(companyItems);
+            
+            // Áp dụng sắp xếp
+            if (filterValue === 'rating') {
+                companyArray.sort((a, b) => {
+                    return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
+                });
+            } else if (filterValue === 'name-asc') {
+                companyArray.sort((a, b) => {
+                    return a.dataset.name.localeCompare(b.dataset.name);
+                });
+            } else if (filterValue === 'name-desc') {
+                companyArray.sort((a, b) => {
+                    return b.dataset.name.localeCompare(a.dataset.name);
+                });
+            }
+            
+            // Thêm lại các phần tử theo thứ tự mới
+            const container = companyItems[0].parentNode;
+            companyArray.forEach(company => {
+                const companyName = company.dataset.name.toLowerCase();
+                
+                if (companyName.includes(searchValue)) {
+                    company.style.display = '';
+                    container.appendChild(company);
+                } else {
+                    company.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

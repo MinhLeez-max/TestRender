@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}
+    {% if is_confirmed %}
+        Xác nhận đặt vé | Đặt vé xe 
+    {% else %}
+        Đặt vé | Đặt vé xe 
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    {% if is_confirmed %}
+                        <!-- Xác nhận đặt chỗ -->
+                        <div class="text-center mb-4">
+                            <div class="bg-success text-white rounded-circle d-inline-block p-3 mb-3">
+                                <i class="fas fa-check fa-3x"></i>
+                            </div>
+                            <h3>Đặt vé thành công!</h3>
+                            <p class="text-muted">Mã đặt vé: <strong>{{ booking.id }}</strong></p>
+                        </div>
+                        
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Thông tin chi tiết đã được gửi đến email của bạn. Bạn cũng có thể xem lại thông tin này trong mục "Lịch sử đặt vé" trong tài khoản của mình.
+                        </div>
+                    {% else %}
+                        <!-- Form đặt chỗ -->
+                        <h4 class="card-title mb-4">Thông tin đặt vé</h4>
+                    {% endif %}
+                    
+                    <!-- Thông tin chuyến đi -->
+                    <div class="border-bottom pb-3 mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            {% if trip.company.logo %}
+                                <img src="{{ trip.company.logo }}" alt="{{ trip.company.name }}" class="me-3" style="max-width: 80px; max-height: 50px;">
+                            {% else %}
+                                <div class="bg-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                    <i class="fas fa-bus text-primary" style="font-size: 20px;"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <div>
+                                <h5 class="mb-1">{{ trip.company.name }}</h5>
+                                <div class="text-warning">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= trip.company.rating|floatformat:"0"|add:"0" %}
+                                            <i class="fas fa-star"></i>
+                                        {% elif forloop.counter <= trip.company.rating|floatformat:"0"|add:"0"|add:"1" and trip.company.rating|floatformat:"1"|slice:"-1:" != "0" %}
+                                            <i class="fas fa-star-half-alt"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-2">
+                                <div class="d-flex">
+                                    <div class="me-2">
+                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 28px; height: 28px;">
+                                            <i class="fas fa-map-marker-alt small"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted small mb-0">Điểm đi</p>
+                                        <p class="mb-0">{{ trip.route.departure_station.name }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-2">
+                                <div class="d-flex">
+                                    <div class="me-2">
+                                        <div class="bg-danger rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 28px; height: 28px;">
+                                            <i class="fas fa-map-marker small"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted small mb-0">Điểm đến</p>
+                                        <p class="mb-0">{{ trip.route.arrival_station.name }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-2">
+                                <p class="text-muted small mb-0">Thời gian khởi hành</p>
+                                <p class="mb-0">{{ trip.departure_time|date:"H:i, d/m/Y" }}</p>
+                            </div>
+                            
+                            <div class="col-md-6 mb-2">
+                                <p class="text-muted small mb-0">Thời gian đến (dự kiến)</p>
+                                <p class="mb-0">{{ trip.arrival_time|date:"H:i, d/m/Y" }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <p class="text-muted small mb-0">Loại xe</p>
+                                <p class="mb-0">
+                                    {% if trip.bus_type == 'limousine' %}
+                                        Limousine
+                                    {% elif trip.bus_type == 'sleeper' %}
+                                        Giường nằm
+                                    {% elif trip.bus_type == 'seater' %}
+                                        Ghế ngồi
+                                    {% elif trip.bus_type == 'express' %}
+                                        Xe khách
+                                    {% endif %}
+                                </p>
+                            </div>
+                            
+                            <div class="col-md-6 mb-2">
+                                <p class="text-muted small mb-0">Số ghế</p>
+                                <p class="mb-0">{{ seat.seat_number }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Thông tin hành khách -->
+                    {% if is_confirmed %}
+                        <div class="border-bottom pb-3 mb-4">
+                            <h5 class="mb-3">Thông tin hành khách</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <p class="text-muted small mb-0">Họ tên</p>
+                                    <p class="mb-0">{{ booking.passenger_name }}</p>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <p class="text-muted small mb-0">Số điện thoại</p>
+                                    <p class="mb-0">{{ booking.passenger_phone }}</p>
+                                </div>
+                                
+                                {% if booking.passenger_email %}
+                                <div class="col-md-6 mb-3">
+                                    <p class="text-muted small mb-0">Email</p>
+                                    <p class="mb-0">{{ booking.passenger_email }}</p>
+                                </div>
+                                {% endif %}
+                                
+                                {% if booking.note %}
+                                <div class="col-md-12">
+                                    <p class="text-muted small mb-0">Ghi chú</p>
+                                    <p class="mb-0">{{ booking.note }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="border-bottom pb-3 mb-4">
+                                <h5 class="mb-3">Thông tin hành khách</h5>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.passenger_name.id_for_label }}" class="form-label">Họ tên</label>
+                                        {{ form.passenger_name }}
+                                        {% if form.passenger_name.errors %}
+                                            <div class="text-danger small mt-1">
+                                                {{ form.passenger_name.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.passenger_phone.id_for_label }}" class="form-label">Số điện thoại</label>
+                                        {{ form.passenger_phone }}
+                                        {% if form.passenger_phone.errors %}
+                                            <div class="text-danger small mt-1">
+                                                {{ form.passenger_phone.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-12 mb-3">
+                                        <label for="{{ form.passenger_email.id_for_label }}" class="form-label">Email</label>
+                                        {{ form.passenger_email }}
+                                        {% if form.passenger_email.errors %}
+                                            <div class="text-danger small mt-1">
+                                                {{ form.passenger_email.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-12 mb-3">
+                                        <label for="{{ form.note.id_for_label }}" class="form-label">Ghi chú</label>
+                                        {{ form.note }}
+                                        {% if form.note.errors %}
+                                            <div class="text-danger small mt-1">
+                                                {{ form.note.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                    {% endif %}
+                    
+                    <!-- Thông tin thanh toán -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">Thông tin thanh toán</h5>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Giá vé</span>
+                            <span>{{ trip.price|floatformat:"0"|intcomma }} đ</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Phí dịch vụ</span>
+                            <span>0 đ</span>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Tổng cộng</span>
+                            <span class="text-danger">{{ trip.price|floatformat:"0"|intcomma }} đ</span>
+                        </div>
+                    </div>
+                    
+                    {% if not is_confirmed %}
+                        <!-- Tùy chọn thanh toán -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">Phương thức thanh toán</h5>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payment1" value="cash" checked>
+                                <label class="form-check-label" for="payment1">
+                                    <i class="fas fa-money-bill-wave text-success me-2"></i>
+                                    Thanh toán tiền mặt khi lên xe
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payment2" value="bank_transfer">
+                                <label class="form-check-label" for="payment2">
+                                    <i class="fas fa-university text-primary me-2"></i>
+                                    Chuyển khoản ngân hàng
+                                </label>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payment3" value="credit_card">
+                                <label class="form-check-label" for="payment3">
+                                    <i class="far fa-credit-card text-danger me-2"></i>
+                                    Thẻ tín dụng/ghi nợ
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="agreement" required>
+                            <label class="form-check-label" for="agreement">
+                                Tôi đồng ý với <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Điều khoản & Điều kiện</a> của Đặt vé xe 
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            Đặt vé
+                        </button>
+                        </form>
+                        
+                        <!-- Điều khoản phương thức -->
+                        <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="termsModalLabel">Điều khoản & Điều kiện</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <h6>1. Quy định đặt vé</h6>
+                                        <p>Khách hàng cần cung cấp thông tin chính xác để đảm bảo việc đặt vé thành công.</p>
+                                        
+                                        <h6>2. Quy định hủy vé</h6>
+                                        <p>Khách hàng có thể hủy vé trước 24 giờ so với thời gian khởi hành. Sau thời điểm này, vé sẽ không được hoàn tiền.</p>
+                                        
+                                        <h6>3. Quy định thanh toán</h6>
+                                        <p>Khách hàng có thể thanh toán bằng tiền mặt khi lên xe, chuyển khoản ngân hàng hoặc thẻ tín dụng/ghi nợ.</p>
+                                        
+                                        <h6>4. Quy định về hành lý</h6>
+                                        <p>Mỗi hành khách được mang theo tối đa 20kg hành lý. Hành lý vượt quá quy định sẽ phụ thu thêm phí.</p>
+                                        
+                                        <h6>5. Quy định lên xe</h6>
+                                        <p>Hành khách cần có mặt tại điểm đón trước ít nhất 15 phút so với giờ khởi hành. Nhà xe có quyền từ chối phục vụ nếu hành khách đến trễ.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đồng ý</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center mt-4">
+                            <a href="{% url 'lichsudatve' %}" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-history me-2"></i>
+                                Lịch sử đặt vé
+                            </a>
+                            <a href="{% url 'home' %}" class="btn btn-primary">
+                                <i class="fas fa-home me-2"></i>
+                                Trang chủ
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

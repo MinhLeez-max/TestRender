@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Thông tin tài khoản | Đặt vé xe {% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Thông tin tài khoản</h4>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">Tên đăng nhập</label>
+                            <input type="text" class="form-control" id="username" value="{{ user.username }}" disabled>
+                            <div class="form-text text-muted">Tên đăng nhập không thể thay đổi sau khi đã đăng ký.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">Họ</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.first_name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">Tên</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.last_name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.email.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Cập nhật thông tin</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Lịch sử đặt vé gần đây</h4>
+                    
+                    {% if user.bookings.all %}
+                        {% for booking in user.bookings.all|slice:":3" %}
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 32px; height: 32px;">
+                                                    <i class="fas fa-bus"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0">{{ booking.trip.company.name }}</h6>
+                                                <p class="text-muted small mb-0">
+                                                    {{ booking.trip.route.departure_station.city }} → {{ booking.trip.route.arrival_station.city }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if booking.status == 'pending' %}
+                                            <span class="badge bg-warning text-dark">Chờ thanh toán</span>
+                                        {% elif booking.status == 'confirmed' %}
+                                            <span class="badge bg-success">Đã xác nhận</span>
+                                        {% elif booking.status == 'cancelled' %}
+                                            <span class="badge bg-danger">Đã hủy</span>
+                                        {% elif booking.status == 'completed' %}
+                                            <span class="badge bg-info">Đã hoàn thành</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <p class="text-muted small mb-0">Ngày đi</p>
+                                            <p class="mb-0 small">{{ booking.trip.departure_time|date:"d/m/Y" }}</p>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <p class="text-muted small mb-0">Thời gian</p>
+                                            <p class="mb-0 small">{{ booking.trip.departure_time|time:"H:i" }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-end">
+                                        <a href="{% url 'xacnhandatphong' booking.id %}" class="btn btn-sm btn-outline-primary">
+                                            Chi tiết
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        <div class="d-grid">
+                            <a href="{% url 'lichsudatve' %}" class="btn btn-outline-primary">
+                                Xem tất cả lịch sử đặt vé
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                            <h5>Bạn chưa đặt vé nào</h5>
+                            <p class="text-muted">Hãy đặt vé đầu tiên của bạn để xem lịch sử hiển thị ở đây</p>
+                            <a href="{% url 'home' %}" class="btn btn-primary mt-2">
+                                <i class="fas fa-search me-2"></i>
+                                Tìm chuyến xe
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Bảo mật tài khoản</h4>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'password_change' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-key me-2"></i>
+                            Đổi mật khẩu
+                        </a>
+                        
+                        <form method="post" action="{% url 'logout' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="fas fa-sign-out-alt me-2"></i>
+                                Đăng xuất
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

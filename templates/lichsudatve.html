@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Lịch sử đặt vé | Đặt vé xe {% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Lịch sử đặt vé</h2>
+    
+    <!-- Lọc tab -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if not status_filter %}active{% endif %}" href="{% url 'lichsudatve' %}">
+                Tất cả
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if status_filter == 'confirmed' %}active{% endif %}" href="{% url 'lichsudatve' %}?status=confirmed">
+                Đã xác nhận
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if status_filter == 'pending' %}active{% endif %}" href="{% url 'lichsudatve' %}?status=pending">
+                Chờ thanh toán
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if status_filter == 'completed' %}active{% endif %}" href="{% url 'lichsudatve' %}?status=completed">
+                Đã hoàn thành
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if status_filter == 'cancelled' %}active{% endif %}" href="{% url 'lichsudatve' %}?status=cancelled">
+                Đã hủy
+            </a>
+        </li>
+    </ul>
+    
+    {% if bookings %}
+        <div class="row">
+            {% for booking in bookings %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted small">Mã đặt vé: </span>
+                                <span class="fw-bold">{{ booking.id }}</span>
+                            </div>
+                            
+                            {% if booking.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">Chờ thanh toán</span>
+                            {% elif booking.status == 'confirmed' %}
+                                <span class="badge bg-success">Đã xác nhận</span>
+                            {% elif booking.status == 'cancelled' %}
+                                <span class="badge bg-danger">Đã hủy</span>
+                            {% elif booking.status == 'completed' %}
+                                <span class="badge bg-info">Đã hoàn thành</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card-body">
+                            <!-- Thông tin nhà xe -->
+                            <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                                {% if booking.trip.company.logo %}
+                                    <img src="{{ booking.trip.company.logo }}" alt="{{ booking.trip.company.name }}" class="me-3" style="max-width: 60px; max-height: 40px;">
+                                {% else %}
+                                    <div class="bg-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-bus text-primary"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div>
+                                    <h6 class="mb-0">{{ booking.trip.company.name }}</h6>
+                                    <p class="text-muted small mb-0">
+                                        {% if booking.trip.bus_type == 'limousine' %}
+                                            Limousine
+                                        {% elif booking.trip.bus_type == 'sleeper' %}
+                                            Giường nằm
+                                        {% elif booking.trip.bus_type == 'seater' %}
+                                            Ghế ngồi
+                                        {% elif booking.trip.bus_type == 'express' %}
+                                            Xe khách
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Thông tin chuyến đi -->
+                            <div class="mb-3">
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <div class="d-flex">
+                                            <div class="me-2">
+                                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 24px; height: 24px;">
+                                                    <i class="fas fa-map-marker-alt small"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <p class="text-muted small mb-0">Điểm đi</p>
+                                                <p class="mb-0 small">{{ booking.trip.route.departure_station.name }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="d-flex">
+                                            <div class="me-2">
+                                                <div class="bg-danger rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 24px; height: 24px;">
+                                                    <i class="fas fa-map-marker small"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <p class="text-muted small mb-0">Điểm đến</p>
+                                                <p class="mb-0 small">{{ booking.trip.route.arrival_station.name }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <p class="text-muted small mb-0">Thời gian khởi hành</p>
+                                        <p class="mb-0 small">{{ booking.trip.departure_time|date:"H:i, d/m/Y" }}</p>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <p class="text-muted small mb-0">Thời gian đến (dự kiến)</p>
+                                        <p class="mb-0 small">{{ booking.trip.arrival_time|date:"H:i, d/m/Y" }}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <p class="text-muted small mb-0">Hành khách</p>
+                                        <p class="mb-0 small">{{ booking.passenger_name }}</p>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <p class="text-muted small mb-0">Số ghế</p>
+                                        <p class="mb-0 small">{{ booking.seat.seat_number }}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between border-top pt-2 mt-2">
+                                    <div>
+                                        <p class="text-muted small mb-0">Ngày đặt</p>
+                                        <p class="mb-0 small">{{ booking.booking_time|date:"H:i, d/m/Y" }}</p>
+                                    </div>
+                                    
+                                    <div class="text-end">
+                                        <p class="text-muted small mb-0">Tổng tiền</p>
+                                        <p class="text-danger fw-bold mb-0">{{ booking.trip.price|floatformat:"0"|intcomma }} đ</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- hành động -->
+                            <div class="d-flex justify-content-end">
+                                <a href="{% url 'xacnhandatphong' booking.id %}" class="btn btn-outline-primary btn-sm me-2">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Chi tiết
+                                </a>
+                                
+                                {% if booking.status == 'confirmed' and booking.trip.departure_time > now %}
+                                    <a href="{% url 'huydatve' booking.id %}" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-times-circle me-1"></i>
+                                        Hủy vé
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                
+                {% if status_filter %}
+                    <h4>Không có vé nào trong danh mục này</h4>
+                    <p class="text-muted">
+                        Bạn chưa có vé nào với trạng thái 
+                        {% if status_filter == 'pending' %}
+                            chờ thanh toán
+                        {% elif status_filter == 'confirmed' %}
+                            đã xác nhận
+                        {% elif status_filter == 'completed' %}
+                            đã hoàn thành
+                        {% elif status_filter == 'cancelled' %}
+                            đã hủy
+                        {% endif %}
+                    </p>
+                {% else %}
+                    <h4>Bạn chưa đặt vé nào</h4>
+                    <p class="text-muted">Hãy đặt vé đầu tiên của bạn để xem lịch sử hiển thị ở đây</p>
+                {% endif %}
+                
+                <a href="{% url 'home' %}" class="btn btn-primary mt-2">
+                    <i class="fas fa-search me-2"></i>
+                    Tìm chuyến xe
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

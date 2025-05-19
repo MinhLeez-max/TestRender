@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Bến xe | Đặt vé xe {% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Danh sách bến xe</h2>
+    
+    <!-- Lọc và Tìm kiếm -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="input-group">
+                <input type="text" class="form-control" id="benearch" placeholder="Tìm kiếm bến xe...">
+                <button class="btn btn-outline-primary" type="button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <select class="form-select" id="cityFilter">
+                <option value="all" selected>Tất cả thành phố</option>
+                {% for city in city_ben.keys %}
+                    <option value="{{ city }}">{{ city }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    
+    <!-- Danh sách Chuyến -->
+    <div class="accordion mb-4" id="benAccordion">
+        {% for city, ben in city_ben.items %}
+            <div class="accordion-item city-group" data-city="{{ city }}">
+                <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                    <button class="accordion-button {% if forloop.first %}{% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ forloop.counter }}">
+                        <div class="d-flex align-items-center">
+                            <div class="me-2">
+                                <i class="fas fa-city text-primary"></i>
+                            </div>
+                            <div>
+                                <span class="fw-bold">{{ city }}</span>
+                                <span class="badge bg-secondary ms-2">{{ ben|length }}</span>
+                            </div>
+                        </div>
+                    </button>
+                </h2>
+                <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#benAccordion">
+                    <div class="accordion-body">
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                            {% for station in ben %}
+                                <div class="col station-item" data-name="{{ station.name }}" data-city="{{ station.city }}">
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ station.name }}</h5>
+                                            <div class="mb-3">
+                                                <div class="d-flex align-items-center text-muted small mb-2">
+                                                    <i class="fas fa-map-marker-alt me-2"></i>
+                                                    <span>{{ station.address }}</span>
+                                                </div>
+                                                
+                                                {% if station.phone %}
+                                                <div class="d-flex align-items-center text-muted small mb-2">
+                                                    <i class="fas fa-phone me-2"></i>
+                                                    <span>{{ station.phone }}</span>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            {% if station.description %}
+                                                <p class="card-text small">{{ station.description|truncatechars:100 }}</p>
+                                            {% endif %}
+                                            
+                                            <div class="row g-2 mt-3">
+                                                <div class="col-6">
+                                                    <a href="{% url 'ketquatimkiem' %}?departure_city={{ station.city }}" class="btn btn-outline-primary btn-sm w-100">
+                                                        <i class="fas fa-arrow-right me-1"></i> Đi từ đây
+                                                    </a>
+                                                </div>
+                                                <div class="col-6">
+                                                    <a href="{% url 'ketquatimkiem' %}?arrival_city={{ station.city }}" class="btn btn-outline-danger btn-sm w-100">
+                                                        <i class="fas fa-arrow-left me-1"></i> Đến đây
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="alert alert-info">
+                Chưa có bến xe nào.
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const benearch = document.getElementById('benearch');
+        const cityFilter = document.getElementById('cityFilter');
+        const cityGroups = document.querySelectorAll('.city-group');
+        const stationItems = document.querySelectorAll('.station-item');
+        
+        // Chức năng tìm kiếm và lọc
+        benearch.addEventListener('input', filterben);
+        cityFilter.addEventListener('change', filterben);
+        
+        function filterben() {
+            const searchValue = benearch.value.toLowerCase();
+            const filterValue = cityFilter.value;
+            
+            cityGroups.forEach(cityGroup => {
+                const city = cityGroup.dataset.city;
+                let hasVisibleben = false;
+                
+                // Kiểm tra xem thành phố này có khớp với bộ lọc không
+                const cityMatches = filterValue === 'all' || city === filterValue;
+                
+                // Tìm các chuyến trong nhóm thành phố này
+                const cityben = cityGroup.querySelectorAll('.station-item');
+                
+                cityben.forEach(station => {
+                    const stationName = station.dataset.name.toLowerCase();
+                    const stationCity = station.dataset.city;
+                    
+                    // Chuyến sẽ hiển thị nếu nó khớp với bộ lọc tìm kiếm và thành phố
+                    const isVisible = stationName.includes(searchValue) && (filterValue === 'all' || stationCity === filterValue);
+                    
+                    station.style.display = isVisible ? '' : 'none';
+                    
+                    if (isVisible) {
+                        hasVisibleben = true;
+                    }
+                });
+                
+                // Hiển thị/ẩn toàn bộ nhóm thành phố dựa trên việc có chuyến nào hiển thị hay không
+                cityGroup.style.display = (cityMatches && hasVisibleben) ? '' : 'none';
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}
