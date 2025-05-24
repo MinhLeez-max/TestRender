@@ -3,9 +3,10 @@ services:
     name: django-app
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn TestRender.wsgi"
+    startCommand: "gunicorn projectdatve.wsgi:application"
     envVars:
       - key: DEBUG
         value: "False"
       - key: SECRET_KEY
         generateValue: true
+    
